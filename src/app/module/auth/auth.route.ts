@@ -13,7 +13,7 @@ router.post('/login', validate(loginSchema), authController.login);
 
 router.post('/logout', authenticate, authController.logout);
 
-router.post('/refresh', authenticate, authController.refresh);
+router.post('/refresh', authController.refresh);
 
 router.get('/profile/:id', authenticate, authController.profile);
 

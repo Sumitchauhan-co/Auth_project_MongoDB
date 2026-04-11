@@ -68,6 +68,11 @@ const refresh = async (req: Request, res: Response) => {
 
 export const profile = async (req: Request, res: Response) => {
     const id = req.params.id;
+    const userId = req.user?._id
+
+    if(userId !== id){
+        throw apiError.unauthorized("Unauthorized action")
+    }
 
     if (!id || Array.isArray(id)) {
         throw apiError.notFound('Profile not found');

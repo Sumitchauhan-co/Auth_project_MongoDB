@@ -1,5 +1,7 @@
 import { Model } from 'mongoose';
 
+
+// for decleration of auth model
 export interface User {
     _id: string;
     firstName: string;
@@ -18,6 +20,7 @@ export interface UserMethods {
 
 export type UserModel = Model<User, {}, UserMethods>;
 
+// added more Request decleration for authenticate middleware
 declare global {
     namespace Express {
         interface Request {
