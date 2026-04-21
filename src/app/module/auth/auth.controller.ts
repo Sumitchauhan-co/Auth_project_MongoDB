@@ -10,14 +10,15 @@ import {
 } from './auth.service.js';
 import apiResponse from '../../common/utils/apiResponse.js';
 import apiError from '../../common/utils/apiError.js';
+import type { CookieOptions } from 'express';
 
 const register = async (req: Request, res: Response) => {
     const { accessToken, user } = await registerService(req.body);
 
-    const cookieOptions = {
+    const cookieOptions: CookieOptions = {
         httpOnly: true,
         secure: true,
-        samSite: 'Strict',
+        sameSite: 'strict',
     };
 
     res.cookie('refreshToken', user.refreshToken, cookieOptions);
@@ -31,10 +32,10 @@ const register = async (req: Request, res: Response) => {
 const login = async (req: Request, res: Response) => {
     const { accessToken, user } = await loginService(req.body);
 
-    const cookieOptions = {
+    const cookieOptions: CookieOptions = {
         httpOnly: true,
         secure: true,
-        samSite: 'Strict',
+        sameSite: 'strict',
     };
 
     res.cookie('refreshToken', user.refreshToken, cookieOptions);
@@ -47,6 +48,12 @@ const login = async (req: Request, res: Response) => {
 
 const logout = async (req: Request, res: Response) => {
     const user = await logoutService(req.user!);
+
+    res.clearCookie('refreshToken',  {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+    })
 
     return apiResponse.ok(res, 'User logged out successfully', user);
 };
