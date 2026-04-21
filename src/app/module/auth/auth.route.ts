@@ -17,8 +17,8 @@ router.post('/refresh', authController.refresh);
 
 router.get('/profile/:id', authenticate, authController.profile);
 
-router.post('/forgot-password', authController.forgotPassword);
+router.post('/forgot-password', forgotPasswordLimiter, authController.forgotPassword);
 
-router.post('/reset-password', forgotPasswordLimiter, authController.resetPassword);
+router.post('/reset-password', authController.resetPassword);
 
 export default router;
