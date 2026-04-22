@@ -9,6 +9,8 @@ export interface User {
     email: string;
     password: string;
     refreshToken?: string;
+    emailVerfied: boolean,
+    verificationToken: string
     resetPasswordToken?: string | undefined;
     resetPasswordExpiry?: Date | undefined;
     role: 'user' | 'admin';

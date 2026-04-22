@@ -3,7 +3,7 @@ import {
     generateAccessToken,
     generateHashedToken,
     generateRefreshToken,
-    generateResetToken,
+    generateToken,
     verifyRefreshToken,
 } from './utils/jwt.js';
 import Auth from './auth.model.js';
@@ -40,6 +40,23 @@ export const registerService = async ({
         id: user._id,
         role: user.role,
     });
+
+    const { hashedToken, token } = await generateToken();
+
+    try {
+        const info = await transporter.sendMail({
+            to: user.email,
+            subject: 'Verify your email',
+            html: `<a href="http://localhost:3000/verify-email?token=${token}">Verify Email</a>`,
+        });
+
+        console.log('Message sent: %s', info.messageId);
+        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+    } catch (err) {
+        console.error('Error while sending mail:', err);
+    }
+
+    user.verificationToken = hashedToken
 
     user.refreshToken = refreshToken;
 
@@ -124,20 +141,20 @@ export const profileService = async (id: string) => {
 };
 
 export const forgotPasswordService = async (email: string) => {
-    const user = await Auth.findOne({ email })
+    const user = await Auth.findOne({ email });
 
     if (!user) {
         throw apiError.badRequest('Invalid email');
     }
 
-    const { resetToken, hashedToken } = await generateResetToken();
+    const { token, hashedToken } = await generateToken();
 
     user.resetPasswordToken = hashedToken;
     user.resetPasswordExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
     await user.save();
 
-    const resetURL = `${process.env.BASE_URL}/reset-password?token=${resetToken}`;
+    const resetURL = `${process.env.BASE_URL}/reset-password?token=${token}`;
 
     // nodemailer logic
 
@@ -183,5 +200,19 @@ export const resetPasswordService = async ({
 
     await user.save();
 
+    return user;
+};
+
+export const verifyEmailService = async (token: string) => {
+    const hashToken = await generateHashedToken(token)
+
+    const user = await Auth.findOneAndUpdate(
+        { verificationToken: hashToken },
+        { emailVerfied: true, verificationToken: null },
+    );
+
+    if (!user) {
+        throw apiError.notFound('Invalid or expired verification token');
+    }
     return user;
 };

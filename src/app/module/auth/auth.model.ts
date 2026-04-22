@@ -40,6 +40,12 @@ const authSchema = new mongoose.Schema<User, UserModel, UserMethods>(
             type: String,
             select: false,
         },
+        emailVerfied: {
+            type: Boolean,
+        },
+        verificationToken: {
+            type: String,
+        },
         resetPasswordToken: {
             type: String,
             select: false,

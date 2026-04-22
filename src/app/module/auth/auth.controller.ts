@@ -7,6 +7,7 @@ import {
     registerService,
     forgotPasswordService,
     resetPasswordService,
+    verifyEmailService,
 } from './auth.service.js';
 import apiResponse from '../../common/utils/apiResponse.js';
 import apiError from '../../common/utils/apiError.js';
@@ -49,11 +50,11 @@ const login = async (req: Request, res: Response) => {
 const logout = async (req: Request, res: Response) => {
     const user = await logoutService(req.user!);
 
-    res.clearCookie('refreshToken',  {
+    res.clearCookie('refreshToken', {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',
-    })
+    });
 
     return apiResponse.ok(res, 'User logged out successfully', user);
 };
@@ -75,10 +76,10 @@ const refresh = async (req: Request, res: Response) => {
 
 export const profile = async (req: Request, res: Response) => {
     const id = req.params.id;
-    const userId = req.user?._id
+    const userId = req.user?._id;
 
-    if(userId !== id){
-        throw apiError.unauthorized("Unauthorized action")
+    if (userId !== id) {
+        throw apiError.unauthorized('Unauthorized action');
     }
 
     if (!id || Array.isArray(id)) {
@@ -120,6 +121,18 @@ const resetPassword = async (req: Request, res: Response) => {
     const user = await resetPasswordService({ token, newPassword });
 
     return apiResponse.ok(res, 'Password reset successfully', { user });
+};
+
+const verifyEmail = async (req: Request, res: Response) => {
+    const token = req.query.token as string;
+
+    if (!token || Array.isArray(token)) {
+        throw apiError.unauthorized('Invalid token');
+    }
+
+    const user = await verifyEmailService(token);
+
+    return apiResponse.ok(res, 'Email verified successfully', { user });
 };
 
 export default {
