@@ -1,16 +1,16 @@
-import apiError from '../../common/utils/apiError.js';
+import apiError from "../../common/utils/apiError.js";
 import {
     generateAccessToken,
     generateHashedToken,
     generateRefreshToken,
     generateToken,
     verifyRefreshToken,
-} from './utils/jwt.js';
-import Auth from './auth.model.js';
-import type { User } from './types/auth.js';
-import type { AuthMiddlewareResponse } from './auth.middleware.js';
-import { transporter } from './utils/mail.js';
-import nodemailer from 'nodemailer';
+} from "./utils/jwt.js";
+import Auth from "./auth.model.js";
+import type { User } from "./types/auth.js";
+import type { AuthMiddlewareResponse } from "./auth.middleware.js";
+import { transporter } from "./utils/mail.js";
+import nodemailer from "nodemailer";
 
 export const registerService = async ({
     firstName,
@@ -21,7 +21,7 @@ export const registerService = async ({
     const existingUser = await Auth.findOne({ email });
 
     if (existingUser) {
-        throw apiError.conflict('User already exists');
+        throw apiError.conflict("User already exists");
     }
 
     const user = await Auth.create({
@@ -46,17 +46,17 @@ export const registerService = async ({
     try {
         const info = await transporter.sendMail({
             to: user.email,
-            subject: 'Verify your email',
+            subject: "Verify your email",
             html: `<a href="http://localhost:3000/verify-email?token=${token}">Verify Email</a>`,
         });
 
-        console.log('Message sent: %s', info.messageId);
-        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+        console.log("Message sent: %s", info.messageId);
+        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
     } catch (err) {
-        console.error('Error while sending mail:', err);
+        console.error("Error while sending mail:", err);
     }
 
-    user.verificationToken = hashedToken
+    user.verificationToken = hashedToken;
 
     user.refreshToken = refreshToken;
 
@@ -72,16 +72,16 @@ export const loginService = async ({
     email: string;
     password: string;
 }) => {
-    const user = await Auth.findOne({ email }).select('+password');
+    const user = await Auth.findOne({ email }).select("+password");
 
     if (!user) {
-        throw apiError.notFound('Invalid user');
+        throw apiError.notFound("Invalid user");
     }
 
     const isPasswordValid = await user.comparePassword(password);
 
     if (!isPasswordValid) {
-        throw apiError.badRequest('Incorrect email or password');
+        throw apiError.badRequest("Incorrect email or password");
     }
 
     const accessToken = await generateAccessToken({
@@ -113,13 +113,13 @@ export const refreshService = async (refreshToken: string) => {
     };
 
     if (!decoded.id) {
-        throw apiError.unauthorized('Invalid refresh token');
+        throw apiError.unauthorized("Invalid refresh token");
     }
 
     const user = await Auth.findById(decoded.id);
 
     if (!user) {
-        throw apiError.notFound('User not found');
+        throw apiError.notFound("User not found");
     }
 
     const accessToken = await generateAccessToken({
@@ -134,7 +134,7 @@ export const profileService = async (id: string) => {
     const user = await Auth.findById(id);
 
     if (!user) {
-        throw apiError.notFound('User not found');
+        throw apiError.notFound("User not found");
     }
 
     return user;
@@ -144,7 +144,7 @@ export const forgotPasswordService = async (email: string) => {
     const user = await Auth.findOne({ email });
 
     if (!user) {
-        throw apiError.badRequest('Invalid email');
+        throw apiError.badRequest("Invalid email");
     }
 
     const { token, hashedToken } = await generateToken();
@@ -154,7 +154,7 @@ export const forgotPasswordService = async (email: string) => {
 
     await user.save();
 
-    const resetURL = `${process.env.BASE_URL}/reset-password?token=${token}`;
+    const resetURL = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 
     // nodemailer logic
 
@@ -162,14 +162,14 @@ export const forgotPasswordService = async (email: string) => {
         const info = await transporter.sendMail({
             from: process.env.SENDER_EMAIL,
             to: email,
-            subject: 'Reset your password',
+            subject: "Reset your password",
             html: `<p>You can reset your password from the link : <a href="${resetURL}">Reset Pasword</a></p><br><p><b>NOTE : </b>Link is active for only 5 minutes of span.</p>`,
         });
 
-        console.log('Message sent: %s', info.messageId);
-        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+        console.log("Message sent: %s", info.messageId);
+        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
     } catch (err) {
-        console.error('Error while sending mail:', err);
+        console.error("Error while sending mail:", err);
     }
 
     return;
@@ -187,10 +187,10 @@ export const resetPasswordService = async ({
     const user = await Auth.findOne({
         resetPasswordToken: hashedToken,
         resetPasswordExpiry: { $gt: new Date() },
-    }).select('+password');
+    }).select("+password");
 
     if (!user) {
-        throw apiError.badRequest('Invalid or expired token');
+        throw apiError.badRequest("Invalid or expired token");
     }
 
     user.password = newPassword;
@@ -204,7 +204,7 @@ export const resetPasswordService = async ({
 };
 
 export const verifyEmailService = async (token: string) => {
-    const hashToken = await generateHashedToken(token)
+    const hashToken = await generateHashedToken(token);
 
     const user = await Auth.findOneAndUpdate(
         { verificationToken: hashToken },
@@ -212,7 +212,7 @@ export const verifyEmailService = async (token: string) => {
     );
 
     if (!user) {
-        throw apiError.notFound('Invalid or expired verification token');
+        throw apiError.notFound("Invalid or expired verification token");
     }
     return user;
 };
